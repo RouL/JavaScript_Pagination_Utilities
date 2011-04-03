@@ -70,9 +70,7 @@ var Pagination = Class.create({
 				this.paginator.insert(pageList);
 				
 				// add previous button
-				var previousElement = new Element('li', {
-					'class': 'skip'
-				});
+				var previousElement = new Element('li');
 				pageList.insert(previousElement);
 				
 				if (this.activePage > 1) {
@@ -95,6 +93,7 @@ var Pagination = Class.create({
 					});
 					previousElement.insert(previousImage);
 				}
+				previousElement.addClassName('skip');
 				
 				// add first page
 				pageList.insert(this.renderLink(1));
@@ -238,9 +237,7 @@ var Pagination = Class.create({
 				pageList.insert(this.renderLink(this.maxPage));
 				
 				// add next button
-				var nextElement = new Element('li', {
-					'class': 'skip'
-				});
+				var nextElement = new Element('li');
 				pageList.insert(nextElement);
 				
 				if (this.activePage < this.maxPage) {
@@ -263,6 +260,7 @@ var Pagination = Class.create({
 					});
 					nextElement.insert(nextImage);
 				}
+				nextElement.addClassName('skip');
 			}
 			else {
 				// otherwise hide the paginator if not already hidden

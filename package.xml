@@ -3,7 +3,7 @@
 	<packageinformation>
 		<packagename>JavaScript Pagination Utilities</packagename>
 		<packagedescription></packagedescription>
-		<standalone>1</standalone>
+		<isunique>1</isunique>
 		<version>1.0.0</version>
 		<date>2011-04-03</date>
 	</packageinformation>
@@ -15,7 +15,7 @@
 	
 	<requiredpackages>
 		<!-- basics -->
-		<requiredpackage minversion="1.1.0" file="requirements/com.woltlab.wcf.tar">com.woltlab.wcf</requiredpackage>
+		<requiredpackage minversion="1.1.0">com.woltlab.wcf</requiredpackage>
 	</requiredpackages>
 	
 	<instructions type="install">
