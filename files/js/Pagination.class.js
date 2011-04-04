@@ -378,6 +378,15 @@ var Pagination = Class.create({
 		}
 	},
 	
+	/**
+	 * Returns the content of the given language variable
+	 * Returns an empty string if the given language variable is
+	 * not present
+	 * 
+	 * @parameter	string	langVar
+	 * 
+	 * @return		string
+	 */
 	getLanguageVar: function(langVar) {
 		if (this.options.lang[langVar] == undefined || this.options.lang[langVar] == null) {
 			return '';
@@ -393,8 +402,6 @@ var Pagination = Class.create({
 	 * @parameter	integer	page
 	 * 
 	 * @return		string
-	 * 
-	 * @todo		really format number
 	 */
 	formatPageNumber: function(page) {
 		var pageNum = String(page);
