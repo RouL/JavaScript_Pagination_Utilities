@@ -387,6 +387,7 @@ var Pagination = Class.create({
 			var childLink = childContainer.down('a');
 			childLink.show();
 		}
+		Event.stop(event);
 	},
 	
 	/**
