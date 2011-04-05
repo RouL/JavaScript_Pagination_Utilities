@@ -4,7 +4,7 @@
 		<packagename>JavaScript Pagination Utilities</packagename>
 		<packagedescription></packagedescription>
 		<isunique>1</isunique>
-		<version>1.0.0</version>
+		<version>1.0.1</version>
 		<date>2011-04-03</date>
 	</packageinformation>
 	
@@ -19,6 +19,11 @@
 	</requiredpackages>
 	
 	<instructions type="install">
+		<!-- files -->
+		<files>files.tar</files>
+	</instructions>
+	
+	<instructions type="update" fromversion="1.0.1">
 		<!-- files -->
 		<files>files.tar</files>
 	</instructions>

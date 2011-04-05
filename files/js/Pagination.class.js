@@ -303,11 +303,21 @@ var Pagination = Class.create({
 	 */
 	switchPage: function(event, page) {
 		if (page != this.activePage && page > 0 && page <= this.maxPage) {
-			this.activePage = page;
-			this.render();
-			this.paginator.fire('pagination:switched', {
-				activePage: this.activePage
+			var result = this.paginator.fire('pagination:shouldSwitch', {
+				page: page
 			});
+			if (!result.stopped) {
+				this.activePage = page;
+				this.render();
+				this.paginator.fire('pagination:switched', {
+					activePage: this.activePage
+				});
+			}
+			else {
+				this.paginator.fire('pagination:notSwitched', {
+					activePage: this.activePage
+				});
+			}
 		}
 	},
 	
