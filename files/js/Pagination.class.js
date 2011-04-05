@@ -17,6 +17,7 @@ var Pagination = Class.create({
 	 * @parameter	string	paginatorID
 	 * @parameter	integer	activePage
 	 * @parameter	integer	maxPage
+	 * @parameter	Object	options
 	 */
 	initialize: function(paginatorID, activePage, maxPage, options) {
 		// bindings
