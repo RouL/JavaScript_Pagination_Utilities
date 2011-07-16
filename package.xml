@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package name="info.codingcorner.wcf.js.pagination.sample" xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/package.xsd">
+	<packageinformation>
+		<packagename>Example: JavaScript Pagination Utilities</packagename>
+		<packagedescription>Example plugin for "JavaScript Pagination Utilities"</packagedescription>
+		<version>1.0.0</version>
+		<date>2011-04-03</date>
+		<plugin>com.woltlab.wbb</plugin>
+	</packageinformation>
+													
+	<authorinformation>
+		<author>RouL</author>
+		<authorurl>http://codingcorner.info/</authorurl>
+	</authorinformation>
+							
+	<requiredpackages>
+		<!-- basics -->
+		<requiredpackage minversion="1.1.0">com.woltlab.wcf</requiredpackage>
+		<requiredpackage minversion="3.1.0">com.woltlab.wbb</requiredpackage>
+		<requiredpackage minversion="1.0.0">info.codingcorner.wcf.js.pagination</requiredpackage>
+	</requiredpackages>
+								
+	<instructions type="install">
+		<!-- files -->
+		<files>files.tar</files>
+		<templates>templates.tar</templates>
+	</instructions>
+</package>
