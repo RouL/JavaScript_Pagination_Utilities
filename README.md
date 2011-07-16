@@ -6,7 +6,7 @@ This API package provides a class for creating "pagechooser" with JavaScript wit
 Usage
 -----
 
-TODO: add example
+Look into the example in the **example** branch for the usage.
 
 License
 -------
