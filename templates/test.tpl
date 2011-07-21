@@ -1,4 +1,4 @@
-nclude file="documentHeader"}
+{include file="documentHeader"}
 <head>
 <title>TestPage - {lang}{PAGE_TITLE}{/lang}</title> {include
 file='headInclude' sandbox=false}
@@ -26,31 +26,17 @@ file='headInclude' sandbox=false}
 			//<![CDATA[
 			// We're starting with page 1 and the highest page is 10000 in this example.
 			// The first 3 parameters are required!
-			new Pagination('testPaginator', 1, 10000, {
-				lang: {
-					// you can use your own language variables and/or thousendsSeparator if you want (as source)
-					// you can leave them out if you don't want to use any text
+			(function($, undefined) { 
+				$('#testPaginator').wcfPages({
+					maxPage: 10000,
+					switched: function(event, ui) {
+						$('#pageNumber').text(String(ui.activePage));
+					},
 					'wcf.global.thousandsSeparator': '{lang}wcf.global.thousandsSeparator{/lang}',
-					'wcf.global.page.next': '{lang}wcf.global.page.next{/lang}',
-					'wcf.global.page.previous': '{lang}wcf.global.page.previous{/lang}'
-				},
-				icon: {
-					// you want own icons? here you can set them
-					// if you don't use the style system leave this out or define your oen icons
-					'previousS.png': '{icon}previousS.png{/icon}',
-					'previousDisabledS.png': '{icon}previousDisabledS.png{/icon}',
-					'arrowDown.png': '{icon}arrowDown.png{/icon}',
-					'nextS.png': '{icon}nextS.png{/icon}',
-					'nextDisabledS.png': '{icon}nextDisabledS.png{/icon}'
-				}
-			});
-
-			// To get informed ybout changes you only have to observe the paginator-element
-			// for the event "pagination:switched"
-			$('testPaginator').observe('pagination:switched', function(event) {
-				// you can get the active page from 'memo.activePage' from the event-object
-				$('pageNumber').update(String(event.memo.activePage));
-			});
+                                        'wcf.global.page.next': '{lang}wcf.global.page.next{/lang}',
+                                        'wcf.global.page.previous': '{lang}wcf.global.page.previous{/lang}',
+				});
+			}(jQuery));
 			//]]>
 		</script>
 	</div>
