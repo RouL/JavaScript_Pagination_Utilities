@@ -210,7 +210,7 @@ $.widget( "ui.wcfPages", {
 			$pageList.append($nextElement);
 			
 			if (this.options.activePage < this.options.maxPage) {
-				var $nextLink = $('<a title="' + this.options['wcf.global.page.next'] + '"></a>');
+				var $nextLink = $('<a title="' + ((this.options['wcf.global.page.next'] != null) ? (' title="' + this.options['wcf.global.page.next'] + '"') : ('')) + '"></a>');
 				$nextElement.append($nextLink);
 				this._bindSwitchPage($nextLink, this.options.activePage + 1);
 				
