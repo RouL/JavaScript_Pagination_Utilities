@@ -6,267 +6,226 @@
  * Parts of the logic are borrowed by "lib/system/template/plugin/TemplatePluginFunctionPages.class.php"
  * from the WoltLab® Community Framework™ which is licensed under the GNU Lesser General Public License.
  */
-var Pagination = Class.create({
-	// some "static" variables
+(function( $, undefined ) {
+
+$.widget( "ui.wcfPages", {
 	SHOW_LINKS: 11,
 	SHOW_SUB_LINKS: 20,
 	
+	options: {
+		// vars
+		activePage: 1,
+		maxPage: 1,
+		
+		// icons
+		previousIcon: RELATIVE_WCF_DIR + 'icon/previousS.png',
+		previousDisabledIcon: RELATIVE_WCF_DIR + 'icon/previousDisabledS.png',
+		arrowDownIcon: RELATIVE_WCF_DIR + 'icon/arrowDown.png',
+		nextIcon: RELATIVE_WCF_DIR + 'icon/nextS.png',
+		nextDisabledIcon: RELATIVE_WCF_DIR + 'icon/nextDisabledS.png',
+		
+		// language
+		'wcf.global.thousandsSeparator': null,
+		'wcf.global.page.next': null,
+		'wcf.global.page.previous': null,
+	},
+	
 	/**
-	 * Initialize the paginator instance
-	 * 
-	 * @parameter	string	paginatorID
-	 * @parameter	integer	activePage
-	 * @parameter	integer	maxPage
-	 * @parameter	Object	options
+	 * @see	jQuery.ui.Widget._create()
 	 */
-	initialize: function(paginatorID, activePage, maxPage, options) {
-		// bindings
-		this.startInput = this._startInput.bindAsEventListener(this);
-		this.handleInput = this._handleInput.bindAsEventListener(this);
-		this.stopInput = this._stopInput.bindAsEventListener(this);
+	_create: function() {
+		this.element.addClass('pageNavigation');
 		
-		// initialize variables
-		this.paginatorID = paginatorID;
-		this.paginator = $(this.paginatorID);
-		this.activePage = activePage;
-		this.maxPage = maxPage;
-		this.options = options;
-		if (this.options == undefined || this.options == null) this.options = new Object();
-		if (this.options.icon == undefined || this.options.icon == null) this.options.icon = new Object();
-		if (this.options.lang == undefined || this.options.lang == null) this.options.lang = new Object();
+		this._render();
+	},
+	
+	/**
+	 * @see	jQuery.ui.Widget.destroy()
+	 */
+	destroy: function() {
+		$.Widget.prototype.destroy.apply(this, arguments);
 		
-		// now do the "real" work
-		if (this.paginator != undefined && this.paginator != null) {
-			// add correct class for pagination
-			this.paginator.addClassName('pageNavigation');
-			
-			this.render();
-		}
+		this.element.children().remove();
 	},
 	
 	/**
 	 * Renders this paginator instance
 	 */
-	render: function() {
-		// makes no sense to think about rendering at all, if we have no paginator
-		if (this.paginator != undefined && this.paginator != null) {
-			// only render if we have more than 1 page
-			if (this.maxPage > 1) {
-				// make sure pagination is visible
-				if (this.paginator.hasClassName('hidden')) {
-					this.paginator.removeClassName('hidden');
-				}
-				if (!this.paginator.visible()) {
-					this.paginator.toggle();
-				}
+	_render: function() {
+		// only render if we have more than 1 page
+		if (!this.options.disabled && this.options.maxPage > 1) {
+			// make sure pagination is visible
+			if (this.element.hasClass('hidden')) {
+				this.element.removeClass('hidden');
+			}
+			this.element.show();
+			
+			this.element.children().remove();
+			
+			var $pageList = $('<ul></ul>');
+			this.element.append($pageList);
+			
+			var $previousElement = $('<li></li>');
+			$pageList.append($previousElement);
+			
+			if (this.options.activePage > 1) {
+				var $previousLink = $('<a' + ((this.options['wcf.global.page.previous'] != null) ? (' title="' + this.options['wcf.global.page.previous'] + '"') : ('')) + '></a>');
+				$previousElement.append($previousLink);
+				this._bindSwitchPage($previousLink, this.options.activePage - 1);
 				
-				// now do the "real" rendering
-				// clear previous pages
-				this.paginator.childElements().each(function (element) {
-					element.remove();
-				});
-				
-				// add list
-				var pageList = new Element('ul');
-				this.paginator.insert(pageList);
-				
-				// add previous button
-				var previousElement = new Element('li');
-				pageList.insert(previousElement);
-				
-				if (this.activePage > 1) {
-					var previousLink = new Element('a', {
-						title: this.getLanguageVar('wcf.global.page.previous')
-					});
-					previousElement.insert(previousLink);
-					previousLink.observe('click', this.switchPage.bindAsEventListener(this, this.activePage - 1));
-					
-					var previousImage = new Element('img', {
-						src: this.getIcon('previousS.png'),
-						alt: ''
-					});
-					previousLink.insert(previousImage);
-				}
-				else {
-					var previousImage = new Element('img', {
-						src: this.getIcon('previousDisabledS.png'),
-						alt: ''
-					});
-					previousElement.insert(previousImage);
-				}
-				previousElement.addClassName('skip');
-				
-				// add first page
-				pageList.insert(this.renderLink(1));
-				
-				// calculate page links
-				var maxLinks = this.SHOW_LINKS - 4;
-				var linksBefore = this.activePage - 2;
-				if (linksBefore < 0) linksBefore = 0;
-				var linksAfter = this.maxPage - (this.activePage + 1);
-				if (linksAfter < 0) linksAfter = 0;
-				if (this.activePage > 1 && this.activePage < this.maxPage) maxLinks--;
-				
-				var half = maxLinks / 2;
-				var left = this.activePage;
-				var right = this.activePage;
-				if (left < 1) left = 1;
-				if (right < 1) right = 1;
-				if (right > this.maxPage - 1) right = this.maxPage - 1;
-				
-				if (linksBefore >= half) {
-					left -= half;
-				}
-				else {
-					left -= linksBefore;
-					right += half - linksBefore;
-				}
-				
-				if (linksAfter >= half) {
-					right += half;
-				}
-				else {
-					right += linksAfter;
-					left -= half - linksAfter;
-				}
-				
-				right = right.ceil();
-				left = left.ceil();
-				if (left < 1) left = 1;
-				if (right > this.maxPage) right = this.maxPage;
-				
-				// left ... links
-				if (left > 1) {
-					if (left - 1 < 2) {
-						pageList.insert(this.renderLink(2));
-					}
-					else {
-						var leftChildren = new Element('li', {
-							'class': 'children'
-						});
-						pageList.insert(leftChildren);
-						
-						var leftChildrenLink = new Element('a').update('&hellip;');
-						leftChildren.insert(leftChildrenLink);
-						leftChildrenLink.observe('click', this.startInput);
-						
-						var leftChildrenImage = new Element('img', {
-							src: this.getIcon('arrowDown.png'),
-							alt: ''
-						})
-						leftChildrenLink.insert(leftChildrenImage);
-						
-						var leftChildrenInput = new Element('input', {
-							type: 'text',
-							'class': 'inputText',
-							name: 'pageNo'
-						});
-						leftChildren.insert(leftChildrenInput);
-						leftChildrenInput.observe('keydown', this.handleInput);
-						leftChildrenInput.observe('keyup', this.handleInput);
-						leftChildrenInput.observe('blur', this.stopInput);
-						
-						var leftChildrenContainer = new Element('div');
-						leftChildren.insert(leftChildrenContainer);
-						
-						var leftChildrenList = new Element('ul');
-						leftChildrenContainer.insert(leftChildrenList);
-						
-						// render sublinks
-						var k = 0;
-						var step = ((left - 2) / this.SHOW_SUB_LINKS).ceil();
-						for (var i = 2; i <= left; i += step) {
-							leftChildrenList.insert(this.renderLink(i, (k != 0 && k % 4 == 0)));
-							k++;
-						}
-					}
-				}
-				
-				// visible links
-				for (var i = left + 1; i < right; i++) {
-					pageList.insert(this.renderLink(i));
-				}
-				
-				// right ... links
-				if (right < this.maxPage) {
-					if (this.maxPage - right < 2) {
-						pageList.insert(this.renderLink(this.maxPage - 1));
-					}
-					else {
-						var rightChildren = new Element('li', {
-							'class': 'children'
-						});
-						pageList.insert(rightChildren);
-						
-						var rightChildrenLink = new Element('a').update('&hellip;');
-						rightChildren.insert(rightChildrenLink);
-						rightChildrenLink.observe('click', this.startInput);
-						
-						var rightChildrenImage = new Element('img', {
-							src: this.getIcon('arrowDown.png'),
-							alt: ''
-						})
-						rightChildrenLink.insert(rightChildrenImage);
-						
-						var rightChildrenInput = new Element('input', {
-							type: 'text',
-							'class': 'inputText',
-							name: 'pageNo'
-						});
-						rightChildren.insert(rightChildrenInput);
-						rightChildrenInput.observe('keydown', this.handleInput);
-						rightChildrenInput.observe('keyup', this.handleInput);
-						rightChildrenInput.observe('blur', this.stopInput);
-						
-						var rightChildrenContainer = new Element('div');
-						rightChildren.insert(rightChildrenContainer);
-						
-						var rightChildrenList = new Element('ul');
-						rightChildrenContainer.insert(rightChildrenList);
-						
-						// render sublinks
-						var k = 0;
-						var step = ((this.maxPage - right) / this.SHOW_SUB_LINKS).ceil();
-						for (var i = right; i < this.maxPage; i += step) {
-							rightChildrenList.insert(this.renderLink(i, (k != 0 && k % 4 == 0)));
-							k++;
-						}
-					}
-				}
-				
-				// add last page
-				pageList.insert(this.renderLink(this.maxPage));
-				
-				// add next button
-				var nextElement = new Element('li');
-				pageList.insert(nextElement);
-				
-				if (this.activePage < this.maxPage) {
-					var nextLink = new Element('a', {
-						title: this.getLanguageVar('wcf.global.page.next')
-					});
-					nextElement.insert(nextLink);
-					nextLink.observe('click', this.switchPage.bindAsEventListener(this, this.activePage + 1));
-					
-					var nextImage = new Element('img', {
-						src: this.getIcon('nextS.png'),
-						alt: ''
-					});
-					nextLink.insert(nextImage);
-				}
-				else {
-					var nextImage = new Element('img', {
-						src: this.getIcon('nextDisabledS.png'),
-						alt: ''
-					});
-					nextElement.insert(nextImage);
-				}
-				nextElement.addClassName('skip');
+				var $previousImage = $('<img src="' + this.options.previousIcon + '" alt="" />');
+				$previousLink.append($previousImage);
 			}
 			else {
-				// otherwise hide the paginator if not already hidden
-				this.paginator.addClassName('hidden');
+				var $previousImage = $('<img src="' + this.options.previousDisabledIcon + '" alt="" />');
+				$previousElement.append($previousImage);
 			}
+			$previousElement.addClass('skip');
+			
+			// add first page
+			$pageList.append(this._renderLink(1));
+			
+			// calculate page links
+			var $maxLinks = this.SHOW_LINKS - 4;
+			var $linksBefore = this.options.activePage - 2;
+			if ($linksBefore < 0) $linksBefore = 0;
+			var $linksAfter = this.options.maxPage - (this.options.activePage + 1);
+			if ($linksAfter < 0) $linksAfter = 0;
+			if (this.options.activePage > 1 && this.options.activePage < this.options.maxPage) $maxLinks--;
+			
+			var $half = $maxLinks / 2;
+			var $left = this.options.activePage;
+			var $right = this.options.activePage;
+			if ($left < 1) $left = 1;
+			if ($right < 1) $right = 1;
+			if ($right > this.options.maxPage - 1) $right = this.options.maxPage - 1;
+			
+			if ($linksBefore >= $half) {
+				$left -= $half;
+			}
+			else {
+				$left -= $linksBefore;
+				$right += $half - $linksBefore;
+			}
+			
+			if ($linksAfter >= $half) {
+				$right += $half;
+			}
+			else {
+				$right += $linksAfter;
+				$left -= $half - $linksAfter;
+			}
+			
+			$right = Math.ceil($right);
+			$left = Math.ceil($left);
+			if ($left < 1) $left = 1;
+			if ($right > this.options.maxPage) $right = this.options.maxPage;
+			
+			// left ... links
+			if ($left > 1) {
+				if ($left - 1 < 2) {
+					$pageList.append(this._renderLink(2));
+				}
+				else {
+					var $leftChildren = $('<li class="children"></li>');
+					$pageList.append($leftChildren);
+					
+					var $leftChildrenLink = $('<a>&hellip;</a>');
+					$leftChildren.append($leftChildrenLink);
+					$leftChildrenLink.click($.proxy(this._startInput, this));
+					
+					var $leftChildrenImage = $('<img src="' + this.options.arrowDownIcon + '" alt="" />');
+					$leftChildrenLink.append($leftChildrenImage);
+					
+					var $leftChildrenInput = $('<input type="text" class="inputText" name="pageNo" />');
+					$leftChildren.append($leftChildrenInput);
+					$leftChildrenInput.keydown($.proxy(this._handleInput, this));
+					$leftChildrenInput.keyup($.proxy(this._handleInput, this));
+					$leftChildrenInput.blur($.proxy(this._stopInput, this));
+					
+					var $leftChildrenContainer = $('<div></div>');
+					$leftChildren.append($leftChildrenContainer);
+					
+					var $leftChildrenList = $('<ul></u>');
+					$leftChildrenContainer.append($leftChildrenList);
+					
+					// render sublinks
+					var $k = 0;
+					var $step = Math.ceil(($left - 2) / this.SHOW_SUB_LINKS);
+					for (var $i = 2; $i <= $left; $i += $step) {
+						$leftChildrenList.append(this._renderLink($i, ($k != 0 && $k % 4 == 0)));
+						$k++;
+					}
+				}
+			}
+			
+			// visible links
+			for (var $i = $left + 1; $i < $right; $i++) {
+				$pageList.append(this._renderLink($i));
+			}
+			
+			// right ... links
+			if ($right < this.options.maxPage) {
+				if (this.options.maxPage - $right < 2) {
+					$pageList.append(this._renderLink(this.options.maxPage - 1));
+				}
+				else {
+					var $rightChildren = $('<li class="children"></li>');
+					$pageList.append($rightChildren);
+					
+					var $rightChildrenLink = $('<a>&hellip;</a>');
+					$rightChildren.append($rightChildrenLink);
+					$rightChildrenLink.click($.proxy(this._startInput, this));
+					
+					var $rightChildrenImage = $('<img src="' + this.options.arrowDownIcon + '" alt="" />');
+					$rightChildrenLink.append($rightChildrenImage);
+					
+					var $rightChildrenInput = $('<input type="text" class="inputText" name="pageNo" />');
+					$rightChildren.append($rightChildrenInput);
+					$rightChildrenInput.keydown($.proxy(this._handleInput, this));
+					$rightChildrenInput.keyup($.proxy(this._handleInput, this));
+					$rightChildrenInput.blur($.proxy(this._stopInput, this));
+					
+					var $rightChildrenContainer = $('<div></div>');
+					$rightChildren.append($rightChildrenContainer);
+					
+					var $rightChildrenList = $('<ul></ul>');
+					$rightChildrenContainer.append($rightChildrenList);
+					
+					// render sublinks
+					var $k = 0;
+					var $step = Math.ceil((this.options.maxPage - $right) / this.SHOW_SUB_LINKS);
+					for (var $i = $right; $i < this.options.maxPage; $i += $step) {
+						$rightChildrenList.append(this._renderLink($i, ($k != 0 && $k % 4 == 0)));
+						$k++;
+					}
+				}
+			}
+			
+			// add last page
+			$pageList.append(this._renderLink(this.options.maxPage));
+			
+			// add next button
+			var $nextElement = $('<li></li>');
+			$pageList.append($nextElement);
+			
+			if (this.options.activePage < this.options.maxPage) {
+				var $nextLink = $('<a title="' + ((this.options['wcf.global.page.next'] != null) ? (' title="' + this.options['wcf.global.page.next'] + '"') : ('')) + '"></a>');
+				$nextElement.append($nextLink);
+				this._bindSwitchPage($nextLink, this.options.activePage + 1);
+				
+				var $nextImage = $('<img src="' + this.options.nextIcon + '" alt="" />');
+				$nextLink.append($nextImage);
+			}
+			else {
+				var $nextImage = $('<img src="' + this.options.nextDisabledIcon + '" alt="" />');
+				$nextElement.append($nextImage);
+			}
+			$nextElement.addClass('skip');
+		}
+		else {
+			// otherwise hide the paginator if not already hidden
+			this.element.hide();
 		}
 	},
 	
@@ -275,137 +234,25 @@ var Pagination = Class.create({
 	 * 
 	 * @parameter	integer	page
 	 * 
-	 * @return		Element
+	 * @return		$(element)
 	 */
-	renderLink: function(page, lineBreak) {
-		var pageElement = new Element('li');
+	_renderLink: function(page, lineBreak) {
+		var $pageElement = $('<li></li>');
 		if (lineBreak != undefined && lineBreak) {
-			pageElement.addClassName('break');
+			$pageElement.addClass('break');
 		}
-		if (page != this.activePage) {
-			var pageLink = new Element('a').update(this.formatPageNumber(page)); 
-			pageElement.insert(pageLink);
-			pageLink.observe('click', this.switchPage.bindAsEventListener(this, page));
-		}
-		else {
-			pageElement.addClassName('active');
-			var pageSubElement = new Element('span').update(this.formatPageNumber(page));
-			pageElement.insert(pageSubElement);
-		}
-		
-		return pageElement;
-	},
-	
-	/**
-	 * Switches to the given page
-	 * 
-	 * @parameter	Event	event
-	 * @parameter	integer	page
-	 */
-	switchPage: function(event, page) {
-		if (page != this.activePage && page > 0 && page <= this.maxPage) {
-			var result = this.paginator.fire('pagination:shouldSwitch', {
-				page: page
-			});
-			if (!result.stopped) {
-				this.activePage = page;
-				this.render();
-				this.paginator.fire('pagination:switched', {
-					activePage: this.activePage
-				});
-			}
-			else {
-				this.paginator.fire('pagination:notSwitched', {
-					activePage: this.activePage
-				});
-			}
-		}
-	},
-	
-	/**
-	 * Start input of pagenumber
-	 * 
-	 * @parameter	Event	event
-	 */
-	_startInput: function(event) {
-		// hide a-tag
-		var childLink = Event.element(event);
-		if (!childLink.match('a')) childLink = childLink.up('a');
-		
-		childLink.hide();
-		
-		// show input-tag
-		var childInput = childLink.up('li').down('input');
-		childInput.setStyle({
-			display: 'block'
-		});
-		childInput.value = '';
-		
-		childInput.focus();
-	},
-	
-	/**
-	 * Handles input of pagenumber
-	 * 
-	 * @parameter	Event	event
-	 */
-	_handleInput: function(event) {
-		if (event.type != 'keyup' || IS_IE7) {
-			// get input-tag
-			var childInput = Event.element(event);
-			
-			// get key
-			var key = event.which || event.keyCode;
-			
-			if (!IS_IE7 || ((key == Event.KEY_RETURN || key == Event.KEY_ESC) && event.type == 'keyup')) {
-				if (key == Event.KEY_RETURN) {
-					this.switchPage(event, parseInt(childInput.value));
-				}
-				
-				if (key == Event.KEY_RETURN || key == Event.KEY_ESC) {
-					this._stopInput(event);
-				}
-			}
-		}
-	},
-	
-	/**
-	 * Stops input of pagenumber
-	 * 
-	 * @parameter	Event	event
-	 */
-	_stopInput: function(event) {
-		// hide input-tag
-		var childInput = Event.element(event);
-		childInput.setStyle({
-			display: 'none'
-		});
-		
-		// show a-tag
-		var childContainer = childInput.up('li')
-		if (childContainer != undefined && childContainer != null) {
-			var childLink = childContainer.down('a');
-			childLink.show();
-		}
-		Event.stop(event);
-	},
-	
-	/**
-	 * Returns the content of the given language variable
-	 * Returns an empty string if the given language variable is
-	 * not present
-	 * 
-	 * @parameter	string	langVar
-	 * 
-	 * @return		string
-	 */
-	getLanguageVar: function(langVar) {
-		if (this.options.lang[langVar] == undefined || this.options.lang[langVar] == null) {
-			return '';
+		if (page != this.options.activePage) {
+			var $pageLink = $('<a>' + this._formatPageNumber(page) + '</a>'); 
+			$pageElement.append($pageLink);
+			this._bindSwitchPage($pageLink, page);
 		}
 		else {
-			return this.options.lang[langVar];
+			$pageElement.addClass('active');
+			var $pageSubElement = $('<span>' + this._formatPageNumber(page) + '</span>');
+			$pageElement.append($pageSubElement);
 		}
+		
+		return $pageElement;
 	},
 	
 	/**
@@ -415,42 +262,152 @@ var Pagination = Class.create({
 	 * 
 	 * @return		string
 	 */
-	formatPageNumber: function(page) {
-		var pageNum = String(page);
+	_formatPageNumber: function(page) {
+		var $pageNum = String(page);
 		if (page >= 1000) {
-			var separator = this.getLanguageVar('wcf.global.thousandsSeparator');
+			var $separator = this.options['wcf.global.thousandsSeparator'];
 			
-			if (separator != '') {
-				var numElements = new Array();
-				var firstPart = pageNum.length % 3
-				if (firstPart == 0) firstPart = 3;
-				for (var i = 0; i < (pageNum.length / 3).ceil(); i++) {
-					if (i == 0) numElements.push(pageNum.substring(0, firstPart));
+			if ($separator != null && $separator != '') {
+				var $numElements = new Array();
+				var $firstPart = $pageNum.length % 3
+				if ($firstPart == 0) $firstPart = 3;
+				for (var $i = 0; $i < Math.ceil($pageNum.length / 3); $i++) {
+					if ($i == 0) $numElements.push($pageNum.substring(0, $firstPart));
 					else {
-						var start = ((i - 1) * 3) + firstPart
-						numElements.push(pageNum.substring(start, start + 3));
+						var $start = (($i - 1) * 3) + $firstPart
+						$numElements.push($pageNum.substring($start, $start + 3));
 					}
 				}
-				pageNum = numElements.join(separator);
+				$pageNum = $numElements.join($separator);
 			}
 		}
 		
-		return pageNum;
+		return $pageNum;
 	},
 	
 	/**
-	 * Adds the path to the given icon
+	 * Binds the 'click'-event for the page switching to the given element.
 	 * 
-	 * @parameter	string	icon
-	 * 
-	 * @return		string
+	 * @parameter	$(element)	element
+	 * @paremeter	integer		page
 	 */
-	getIcon: function(icon) {
-		if (this.options.icon[icon] == undefined || this.options.icon[icon] == null) {
-			return RELATIVE_WCF_DIR + 'icon/' + icon;
+	_bindSwitchPage: function(element, page) {
+		var $self = this;
+		element.click(function() {
+			$self.switchPage(page);
+		});
+	},
+	
+	/**
+	 * Switches to the given page
+	 * 
+	 * @parameter	Event	event
+	 * @parameter	integer	page
+	 */
+	switchPage: function(page) {
+		this._setOption('activePage', page);
+	},
+	
+	/**
+	 * @see	jQuery.ui.Widget._setOption()
+	 */
+	_setOption: function(key, value) {
+		if (key == 'activePage') {
+			if (value != this.options[key] && value > 0 && value <= this.options.maxPage) {
+				var $result = this._trigger('shouldSwitch', undefined, {
+					nextPage: value,
+				});
+				
+				if ($result) {
+					this.options[key] = value;
+					this._render();
+					this._trigger('switched', undefined, {
+						activePage: value,
+					});
+				}
+				else {
+					this._trigger('notSwitched', undefined, {
+						activePage: value,
+					});
+				}
+			}
 		}
 		else {
-			return this.options.icon[icon];
+			this.options[key] = value;
+			
+			if (key == 'disabled') {
+				if (value) {
+					this.element.children().remove();
+				}
+				else {
+					this._render()
+				}
+			}
+			else if (key == 'maxPage') {
+				this._render();
+			}
 		}
-	}
+		
+		return this;
+	},
+	
+	/**
+	 * Start input of pagenumber
+	 * 
+	 * @parameter	Event	event
+	 */
+	_startInput: function(event) {
+		// hide a-tag
+		var $childLink = $(event.currentTarget);
+		if (!$childLink.is('a')) $childLink = $childLink.parent('a');
+		
+		$childLink.hide();
+		
+		// show input-tag
+		var $childInput = $childLink.parent('li').children('input')
+			.css('display', 'block')
+			.val('');
+		
+		$childInput.focus();
+	},
+	
+	/**
+	 * Stops input of pagenumber
+	 * 
+	 * @parameter	Event	event
+	 */
+	_stopInput: function(event) {
+		// hide input-tag
+		var $childInput = $(event.currentTarget);
+		$childInput.css('display', 'none');
+		
+		// show a-tag
+		var $childContainer = $childInput.parent('li')
+		if ($childContainer != undefined && $childContainer != null) {
+			$childContainer.children('a').show();
+		}
+	},
+	
+	/**
+	 * Handles input of pagenumber
+	 * 
+	 * @parameter	Event	event
+	 */
+	_handleInput: function(event) {
+		var $ie7 = ($.browser.msie && $.browser.version == '7.0');
+		if (event.type != 'keyup' || $ie7) {
+			if (!$ie7 || ((event.which == 13 || event.which == 27) && event.type == 'keyup')) {
+				if (event.which == 13) {
+					this.switchPage(parseInt($(event.currentTarget).val()));
+				}
+				
+				if (event.which == 13 || event.which == 27) {
+					this._stopInput(event);
+					event.stopPropagation();
+				}
+			}
+		}
+	},
 });
+
+}( jQuery ) );

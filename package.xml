@@ -16,6 +16,8 @@
 	<requiredpackages>
 		<!-- basics -->
 		<requiredpackage minversion="1.1.0">com.woltlab.wcf</requiredpackage>
+		<requiredpackage minversion="1.5.2">info.codingcorner.wcf.js.jquery</requiredpackage>
+		<requiredpackage minversion="1.8.11">info.codingcorner.wcf.js.jquery.ui</requiredpackage>
 	</requiredpackages>
 	
 	<instructions type="install">
