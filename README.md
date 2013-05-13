@@ -1,6 +1,8 @@
 JavaScript Pagination Utilities
 ===============================
 
+    Integrated in WCF 2.0
+
 This API package provides a class for creating "pagechooser" with JavaScript within the WoltLab Community Framework. You can easily show pages and pages of content with AJAX with it for example.
 
 Usage
